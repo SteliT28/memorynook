@@ -3,7 +3,7 @@
 // notes and uses them to write an answer.
 
 const EMBEDDING_MODEL = "@cf/baai/bge-base-en-v1.5";
-const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -64,6 +64,7 @@ async function handleAsk(request, env) {
   const { results: countCheck } = await env.DB.prepare(
     "SELECT COUNT(*) as count FROM notes"
   ).all();
+
   if (!countCheck[0].count) {
     return json({
       answer: "You haven't saved any notes yet, so I don't have anything to look through. Add a note first.",
@@ -72,13 +73,15 @@ async function handleAsk(request, env) {
   }
 
   const queryVector = await embed(env, question.trim());
+
   const matches = await env.VECTORIZE.query(queryVector, {
     topK: 5,
     returnValues: false,
-    returnMetadata: false,
+    returnMetadata: "none",
   });
 
   const ids = matches.matches.map((m) => m.id);
+
   if (ids.length === 0) {
     return json({
       answer: "I couldn't find anything relevant in your notes.",
@@ -87,6 +90,7 @@ async function handleAsk(request, env) {
   }
 
   const placeholders = ids.map(() => "?").join(",");
+
   const { results: notes } = await env.DB.prepare(
     `SELECT id, content, created_at FROM notes WHERE id IN (${placeholders})`
   )
@@ -94,7 +98,10 @@ async function handleAsk(request, env) {
     .all();
 
   const context = notes
-    .map((n, i) => `Note ${i + 1} (saved ${n.created_at.slice(0, 10)}): ${n.content}`)
+    .map(
+      (n, i) =>
+        `Note ${i + 1} (saved ${n.created_at.slice(0, 10)}): ${n.content}`
+    )
     .join("\n\n");
 
   const prompt = `You are a helpful personal memory assistant. Answer the question using ONLY the notes below. If the notes don't contain the answer, say so plainly rather than guessing.
@@ -118,17 +125,27 @@ Answer:`;
 
 function checkAuth(request, env) {
   const header = request.headers.get("Authorization");
-  if (!header || !header.startsWith("Basic ")) return false;
+
+  if (!header || !header.startsWith("Basic ")) {
+    return false;
+  }
+
   const decoded = atob(header.slice(6));
   const separatorIndex = decoded.indexOf(":");
-  const password = separatorIndex === -1 ? decoded : decoded.slice(separatorIndex + 1);
+  const password =
+    separatorIndex === -1
+      ? decoded
+      : decoded.slice(separatorIndex + 1);
+
   return password === env.APP_PASSWORD;
 }
 
 function unauthorized() {
   return new Response("Password required.", {
     status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Memory Nook"' },
+    headers: {
+      "WWW-Authenticate": 'Basic realm="Memory Nook"',
+    },
   });
 }
 
@@ -145,18 +162,27 @@ export default {
       if (path === "/api/notes" && request.method === "POST") {
         return await handleAddNote(request, env);
       }
+
       if (path === "/api/notes" && request.method === "GET") {
         return await handleListNotes(env);
       }
-      if (path.startsWith("/api/notes/") && request.method === "DELETE") {
+
+      if (
+        path.startsWith("/api/notes/") &&
+        request.method === "DELETE"
+      ) {
         const id = path.split("/").pop();
         return await handleDeleteNote(id, env);
       }
+
       if (path === "/api/ask" && request.method === "POST") {
         return await handleAsk(request, env);
       }
     } catch (err) {
-      return json({ error: err.message || "Something went wrong." }, 500);
+      return json(
+        { error: err.message || "Something went wrong." },
+        500
+      );
     }
 
     // Fall back to serving the static frontend
