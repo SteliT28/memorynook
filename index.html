@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Memory Nook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FBEFDA;
+    --card: #F4DDB8;
+    --card-soft: #F8E7C9;
+    --ink: #3C3229;
+    --ink-soft: #7A6F62;
+    --moss: #4F7A3D;
+    --moss-dark: #3C5E2D;
+    --rose: #C75B72;
+    --rose-soft: #EFC2CB;
+    --border: #E3C68C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Lora', serif;
+    line-height: 1.55;
+  }
+
+  h1, h2, .brand, button, .tab {
+    font-family: 'Fredoka', sans-serif;
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  .mark {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .mark svg { width: 100%; height: 100%; }
+
+  .brand {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .tagline {
+    color: var(--ink-soft);
+    margin: 6px 0 32px;
+    font-style: italic;
+    font-size: 15px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+  }
+
+  .panel h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .panel .hint {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin: 0 0 16px;
+  }
+
+  textarea, input[type=text] {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--cream);
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  input[type=text] { min-height: unset; }
+
+  textarea:focus, input[type=text]:focus {
+    outline: none;
+    border-color: var(--moss);
+    box-shadow: 0 0 0 3px rgba(110,139,93,0.15);
+  }
+
+  button {
+    margin-top: 12px;
+    background: var(--moss);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 22px;
+    font-size: 14.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  button:hover { background: var(--moss-dark); }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button:disabled:hover { background: var(--moss); }
+
+  button.secondary {
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  button.secondary:hover { background: var(--rose-soft); color: var(--ink); }
+
+  .notes-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .note-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .note-card .content {
+    font-size: 14px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .note-card .date {
+    display: block;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    margin-top: 4px;
+    font-family: 'Fredoka', sans-serif;
+  }
+
+  .empty {
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .answer-box {
+    margin-top: 18px;
+    background: var(--rose-soft);
+    border-radius: 18px;
+    padding: 16px 18px;
+    font-size: 14.5px;
+    display: none;
+  }
+
+  .answer-box.show { display: block; }
+
+  .answer-box .label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12px;
+    color: var(--moss-dark);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .sources {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(60,50,41,0.1);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .input-row {
+    position: relative;
+  }
+
+  .input-row textarea {
+    padding-right: 52px;
+  }
+
+  .mic-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .mic-btn:hover {
+    background: var(--rose-soft);
+    color: var(--ink);
+  }
+
+  .mic-btn.listening {
+    background: var(--rose);
+    color: white;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(199,91,114,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(199,91,114,0); }
+  }
+
+  .mic-btn svg { width: 16px; height: 16px; }
+
+  .mic-hint {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin: 6px 0 0;
+    display: none;
+  }
+
+  .mic-hint.show { display: block; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark">
+        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(22,22)">
+            <ellipse rx="9" ry="6" cx="0" cy="-9" fill="#C75B72"/>
+            <ellipse rx="9" ry="6" cx="0" cy="9" fill="#C75B72"/>
+            <ellipse rx="6" ry="9" cx="-9" cy="0" fill="#C75B72"/>
+            <ellipse rx="6" ry="9" cx="9" cy="0" fill="#C75B72"/>
+            <circle r="6.5" cx="0" cy="0" fill="#E8A94F"/>
+          </g>
+        </svg>
+      </div>
+      <h1 class="brand">Memory Nook</h1>
+    </header>
+    <p class="tagline">A cozy little place to keep what you don't want to forget.</p>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Tuck something away</h2>
+        <p class="hint">Write down anything — a thought, a fact, a plan. You can ask about it later.</p>
+        <div class="input-row">
+          <textarea id="noteInput" placeholder="e.g. My landlord's number is 555-0134, or: I want to re-read Piranesi this winter..."></textarea>
+          <button type="button" id="micBtn" class="mic-btn" title="Speak your note" aria-label="Speak your note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+        <p id="micHint" class="mic-hint">Listening... speak your note.</p>
+        <button id="saveBtn">Save note</button>
+
+        <div id="notesList" class="notes-list">
+          <p class="empty">No notes yet — save your first one above.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Ask your nook</h2>
+        <p class="hint">Ask a question and it'll dig through what you've saved.</p>
+        <input type="text" id="askInput" placeholder="e.g. What was that book I wanted to read?" />
+        <button id="askBtn">Ask</button>
+
+        <div id="answerBox" class="answer-box">
+          <div class="label">Answer</div>
+          <div id="answerText"></div>
+          <div id="sourcesText" class="sources"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const noteInput = document.getElementById('noteInput');
+  const saveBtn = document.getElementById('saveBtn');
+  const notesList = document.getElementById('notesList');
+  const askInput = document.getElementById('askInput');
+  const askBtn = document.getElementById('askBtn');
+  const answerBox = document.getElementById('answerBox');
+  const answerText = document.getElementById('answerText');
+  const sourcesText = document.getElementById('sourcesText');
+
+  async function loadNotes() {
+    const res = await fetch('/api/notes');
+    const data = await res.json();
+    if (!data.notes || data.notes.length === 0) {
+      notesList.innerHTML = '<p class="empty">No notes yet — save your first one above.</p>';
+      return;
+    }
+    notesList.innerHTML = data.notes.map(n => `
+      <div class="note-card" data-id="${n.id}">
+        <div>
+          <div class="content">${escapeHtml(n.content)}</div>
+          <span class="date">${new Date(n.created_at).toLocaleDateString()}</span>
+        </div>
+        <button class="secondary" onclick="deleteNote('${n.id}')">Remove</button>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function deleteNote(id) {
+    await fetch('/api/notes/' + id, { method: 'DELETE' });
+    loadNotes();
+  }
+  window.deleteNote = deleteNote;
+
+  saveBtn.addEventListener('click', async () => {
+    const content = noteInput.value.trim();
+    if (!content) return;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    try {
+      await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      noteInput.value = '';
+      await loadNotes();
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save note';
+    }
+  });
+
+  askBtn.addEventListener('click', async () => {
+    const question = askInput.value.trim();
+    if (!question) return;
+    askBtn.disabled = true;
+    askBtn.textContent = 'Thinking...';
+    answerBox.classList.add('show');
+    answerText.innerHTML = '<span class="loading">Looking through your notes...</span>';
+    sourcesText.textContent = '';
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+      const data = await res.json();
+      answerText.textContent = data.answer || 'No answer came back.';
+      if (data.sources && data.sources.length) {
+        sourcesText.textContent = 'Based on ' + data.sources.length + ' saved note' + (data.sources.length > 1 ? 's' : '') + '.';
+      }
+    } catch (e) {
+      answerText.textContent = 'Something went wrong reaching your nook.';
+    } finally {
+      askBtn.disabled = false;
+      askBtn.textContent = 'Ask';
+    }
+  });
+
+  askInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') askBtn.click();
+  });
+
+  // Speech-to-text for dictating notes
+  const micBtn = document.getElementById('micBtn');
+  const micHint = document.getElementById('micHint');
+  const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognitionClass) {
+    micBtn.disabled = true;
+    micBtn.title = 'Speech input is not supported in this browser';
+    micBtn.style.opacity = '0.4';
+  } else {
+    const recognition = new SpeechRecognitionClass();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let listening = false;
+    let baseText = '';
+
+    recognition.addEventListener('result', (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      noteInput.value = (baseText + finalTranscript + interimTranscript).trim();
+    });
+
+    recognition.addEventListener('end', () => {
+      if (listening) {
+        // Browser sometimes stops on its own; keep going until user stops it
+        recognition.start();
+      }
+    });
+
+    recognition.addEventListener('error', () => {
+      listening = false;
+      micBtn.classList.remove('listening');
+      micHint.classList.remove('show');
+    });
+
+    micBtn.addEventListener('click', () => {
+      if (!listening) {
+        baseText = noteInput.value ? noteInput.value.trim() + ' ' : '';
+        listening = true;
+        micBtn.classList.add('listening');
+        micHint.classList.add('show');
+        recognition.start();
+      } else {
+        listening = false;
+        micBtn.classList.remove('listening');
+        micHint.classList.remove('show');
+        recognition.stop();
+      }
+    });
+  }
+
+  loadNotes();
+</script>
+</body>
+</html>
